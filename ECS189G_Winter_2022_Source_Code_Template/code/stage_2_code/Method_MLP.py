@@ -8,9 +8,9 @@ class Method_MLP(method, nn.Module):
 
     # Class variables
     data = None
-    iterations = 3000
+    iterations = 60000
     batch_size = 100
-    learning_rate = 1e-3
+    learning_rate = 1e-3 # 5e-1
 
     def __init__(self, mName, mDescription):
         """Initialization"""
@@ -22,7 +22,6 @@ class Method_MLP(method, nn.Module):
         self.fc_2 = nn.Linear(100, 100)
         self.act_2 = nn.ReLU()
         self.fc_3 = nn.Linear(100, 10) # 10 Output classes in MNIST Dataset
-        #self.act_prob = nn.Softmax(dim=1)
 
     def forward(self, input_x):
         """Propagate Forward
@@ -35,7 +34,7 @@ class Method_MLP(method, nn.Module):
         out = self.fc_2(out)
         out = self.act_2(out)
         out = self.fc_3(out)
-        #output_predictions = self.act_prob(input_x)
+        # output_predictions = self.act_prob(input_x)
 
         return out
 
@@ -46,51 +45,42 @@ class Method_MLP(method, nn.Module):
         """
 
         # Selection of epochs dependent on how much training data.
-        n_epochs = self.iterations / (len(X) / self.batch_size)
+        n_epochs = 300#self.iterations / (len(X) / self.batch_size)
 
         # Optimizer and Loss function
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
+        optimizer.zero_grad()
         loss_criterion = torch.nn.CrossEntropyLoss()
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
 
-        X = torch.FloatTensor(X)
-        y = torch.LongTensor(y)
+        #X = torch.FloatTensor(X)
+        #y = torch.LongTensor(y)
 
         print(f"Running for {n_epochs} epochs...")
 
-        iter = 0
+        #iter = 0
 
         for epoch in range(int(n_epochs)):
-            # This is set up so that we can run mini-batches one at time, although
-            # this assumes that the train data was set up to be enumerated in the correct way.
+            optimizer.zero_grad()
 
-            # Mini-batching code credit: https://stackoverflow.com/questions/45113245/how-to-get
-            # -mini-batches-in-pytorch-in-a-clean-and-efficient-way
-            permutation = torch.randperm(X.size()[0])
+            y_pred = self.forward(torch.FloatTensor(np.array(X)))
+            # convert y to torch.tensor as well
+            y_true = torch.LongTensor(np.array(y))
+            # calculate the training loss
+            train_loss = loss_criterion(y_pred, y_true)
 
-            for i in range(0, X.size()[0], self.batch_size):
-                # Do this for each batch, as PyTorch accumulates gradients
-                optimizer.zero_grad()
+            # check here for the loss.backward doc: https://pytorch.org/docs/stable/generated/torch.Tensor.backward.html
+            # do the error backpropagation to calculate the gradients
+            train_loss.backward()
+            # check here for the opti.step doc: https://pytorch.org/docs/stable/optim.html
+            # update the variables according to the optimizer and the gradients calculated by the above loss.backward function
+            optimizer.step()
 
-                indices = permutation[i:i + self.batch_size]
-                batch_x, batch_y = X[indices], y[indices]
-
-                # Forward pass
-                outputs_pred = self.forward(batch_x) # again, may need to edit how train_d is passed depending on dtype
-                loss = loss_criterion(outputs_pred, batch_y)
-                # Update params
-                loss.backward() # back-prop the errors
-                optimizer.step() # Update via gradient descent
-
-                iter += 1
-
-                if iter % 500 == 0:
-                    # evaluate how training process is going... WIP.
-                    print("Current Progress::....")
-                    #print(batch_y.shape)
-                    current_full_outputs = self.forward(X)
-                    accuracy_evaluator.data = {'true_y': y, 'pred_y': current_full_outputs.max(1)[1]}
-                    print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', loss.item())
+            if epoch % 10 == 0:
+                # evaluate how training process is going... WIP.
+                print("Current Progress::....")
+                accuracy_evaluator.data = {'true_y': y_true.detach().numpy(), 'pred_y': y_pred.max(1)[1].detach().numpy()}
+                print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
 
 
     def test(self, X):
@@ -109,6 +99,14 @@ class Method_MLP(method, nn.Module):
         self.train(self.data['train']['X'], self.data['train']['y'])
         print('Test Results')
         pred_y = self.test(self.data['test']['X'])
+
+        print(pred_y)
+        print(self.data["test"]['y'])
+
+        print("Testing Set Accuracy: ", sum(np.array(pred_y) == np.array(self.data["test"]['y'])) / len(pred_y))
+        accuracy_evaluator = Evaluate_Accuracy('testing evaluator', '')
+        accuracy_evaluator.data = {'true_y': self.data["test"]['y'], 'pred_y': pred_y}
+        print(accuracy_evaluator.evaluate())
 
         return {'pred_y': pred_y, 'true_y': self.data['test']['y']}
 

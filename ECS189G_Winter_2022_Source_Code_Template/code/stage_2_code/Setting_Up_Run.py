@@ -27,4 +27,4 @@ class Setting_Up_Run(setting):
         self.result.data = learned_result
         self.result.save()
 
-        #self.evaluate.data = learned_result
+        self.evaluate.data = learned_result
