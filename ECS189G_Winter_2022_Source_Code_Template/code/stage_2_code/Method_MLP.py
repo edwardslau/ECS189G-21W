@@ -18,10 +18,11 @@ class Method_MLP(method, nn.Module):
         nn.Module.__init__(self)
 
         self.fc_1 = nn.Linear(784, 100)
-        self.act_1 = nn.ReLU()
+        self.act_1 = nn.Hardtanh()
         self.fc_2 = nn.Linear(100, 100)
         self.act_2 = nn.ReLU()
         self.fc_3 = nn.Linear(100, 10) # 10 Output classes in MNIST Dataset
+        self.act_3 = nn.ReLU()
 
     def forward(self, input_x):
         """Propagate Forward
@@ -34,6 +35,7 @@ class Method_MLP(method, nn.Module):
         out = self.fc_2(out)
         out = self.act_2(out)
         out = self.fc_3(out)
+        out = self.act_3(out)
         # output_predictions = self.act_prob(input_x)
 
         return out
@@ -53,14 +55,9 @@ class Method_MLP(method, nn.Module):
         loss_criterion = torch.nn.CrossEntropyLoss()
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
 
-        #X = torch.FloatTensor(X)
-        #y = torch.LongTensor(y)
-
         print(f"Running for {n_epochs} epochs...")
 
-        #iter = 0
-
-        for epoch in range(int(n_epochs)):
+        for epoch in range(1, int(n_epochs) + 1):
             optimizer.zero_grad()
 
             y_pred = self.forward(torch.FloatTensor(np.array(X)))
