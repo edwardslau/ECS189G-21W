@@ -3,6 +3,7 @@ import torch.nn as nn
 from code.base_class.method import method
 import numpy as np
 from code.stage_2_code.Evaluate_Accuracy import Evaluate_Accuracy
+import pandas as pd
 
 class Method_MLP(method, nn.Module):
 
@@ -57,6 +58,7 @@ class Method_MLP(method, nn.Module):
         #y = torch.LongTensor(y)
 
         print(f"Running for {n_epochs} epochs...")
+        df = pd.DataFrame(columns = ['Epochs', 'Loss'])
 
         #iter = 0
 
@@ -75,12 +77,16 @@ class Method_MLP(method, nn.Module):
             # check here for the opti.step doc: https://pytorch.org/docs/stable/optim.html
             # update the variables according to the optimizer and the gradients calculated by the above loss.backward function
             optimizer.step()
+            graph_data = [epoch, train_loss.item()]
+            df.loc[len(df)] = graph_data
 
             if epoch % 10 == 0:
                 # evaluate how training process is going... WIP.
                 print("Current Progress::....")
                 accuracy_evaluator.data = {'true_y': y_true.detach().numpy(), 'pred_y': y_pred.max(1)[1].detach().numpy()}
                 print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
+
+        df.to_csv('loss_data.csv')
 
 
     def test(self, X):
