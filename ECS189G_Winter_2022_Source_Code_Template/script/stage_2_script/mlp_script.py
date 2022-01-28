@@ -14,14 +14,14 @@ if 1:
     torch.manual_seed(2)
     # ------------------------------------------------------
 
-    # ---- objection initialization setction ---------------
+    # ---- objection initialization section---------------
     # Loading Training
     data_obj_train = Dataset_Loader('train', '')
-    data_obj_train.dataset_source_folder_path = '../../data/stage_2_data/stage_2_data/' # CHANGE NEEDED FOR OTHERS
+    data_obj_train.dataset_source_folder_path = '/data/stage_2_data/' # CHANGE NEEDED FOR OTHERS
     data_obj_train.dataset_source_file_name = 'train.csv'
 
     data_obj_test = Dataset_Loader('test', '')
-    data_obj_test.dataset_source_folder_path = '../../data/stage_2_data/stage_2_data/'  # CHANGE NEEDED FOR OTHERS
+    data_obj_test.dataset_source_folder_path = '/data/stage_2_data/'  # CHANGE NEEDED FOR OTHERS
     data_obj_test.dataset_source_file_name = 'test.csv'
 
     method_obj = Method_MLP('mlp', '')
