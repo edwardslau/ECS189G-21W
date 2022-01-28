@@ -39,9 +39,7 @@ if 1:
     print('************ Start ************')
     setting_obj.prepare(data_obj_train, method_obj, result_obj, evaluate_obj)
     setting_obj.print_setup_summary()
-    mean_score, std_score = setting_obj.load_run_save_evaluate()
-    print('************ Overall Performance ************')
-    print('MLP Accuracy: ' + str(mean_score) + ' +/- ' + str(std_score))
+    setting_obj.load_run_save_evaluate()
     print('************ Finish ************')
     # ------------------------------------------------------
 
