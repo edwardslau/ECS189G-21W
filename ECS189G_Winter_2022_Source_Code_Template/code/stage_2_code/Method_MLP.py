@@ -18,7 +18,7 @@ class Method_MLP(method, nn.Module):
         nn.Module.__init__(self)
 
         self.fc_1 = nn.Linear(784, 100)
-        self.act_1 = nn.Hardtanh()
+        self.act_1 = nn.ReLU()
         self.fc_2 = nn.Linear(100, 100)
         self.act_2 = nn.ReLU()
         self.fc_3 = nn.Linear(100, 10) # 10 Output classes in MNIST Dataset
