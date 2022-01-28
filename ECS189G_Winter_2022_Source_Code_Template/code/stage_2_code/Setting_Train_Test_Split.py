@@ -15,7 +15,7 @@ class Setting_Train_Test_Split(setting):
 
     def load_run_save_evaluate(self):
         # load dataset
-        loaded_data = self.dataset.load()
+        loaded_data = self.dataset.load
 
         X_train, X_test, y_train, y_test = train_test_split(loaded_data['X'], loaded_data['y'], test_size=0.33)
 
