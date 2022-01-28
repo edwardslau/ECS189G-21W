@@ -1,6 +1,8 @@
 from code.base_class.dataset import dataset
 import pandas as pd
 import numpy as np
+import os
+import os.path
 
 class Dataset_Loader(dataset):
     data = None
@@ -12,14 +14,17 @@ class Dataset_Loader(dataset):
 
     def load(self):
         print('Loading data...!!!!')
+        file = os.path.dirname(__file__)
+        file = os.path.split(file)[0]
+        file = os.path.split(file)[0]
 
-        f = open(self.dataset_source_folder_path + "train.csv", 'r')
+        f = open(file + self.dataset_source_folder_path + "train.csv", 'r')
         data = np.loadtxt(f, delimiter=",")
         X_train = data[:, 1:]
         y_train = data[:, 0]
         f.close()
 
-        f = open(self.dataset_source_folder_path + "test.csv", 'r')
+        f = open(file + self.dataset_source_folder_path + "test.csv", 'r')
         data = np.loadtxt(f, delimiter=",")
         X_test = data[:, 1:]
         y_test = data[:, 0]
