@@ -8,9 +8,7 @@ class Method_MLP(method, nn.Module):
 
     # Class variables
     data = None
-    iterations = 60000
-    batch_size = 100
-    learning_rate = 1e-3 # 5e-1
+    learning_rate = 1e-3
 
     def __init__(self, mName, mDescription):
         """Initialization"""
@@ -25,7 +23,7 @@ class Method_MLP(method, nn.Module):
         self.act_3 = nn.ReLU()
 
     def forward(self, input_x):
-        """Propagate Forward
+        """Propagate Forward input throughout the model.
 
         :param input_x: arguments to be put through a forward pass
 
@@ -36,22 +34,22 @@ class Method_MLP(method, nn.Module):
         out = self.act_2(out)
         out = self.fc_3(out)
         out = self.act_3(out)
-        # output_predictions = self.act_prob(input_x)
 
         return out
 
     def train(self, X, y):
         """
+        Trains the model.
+
         :param X: input data (images)
         :param y: input data labels (0-9 digits)
         """
 
         # Selection of epochs dependent on how much training data.
-        n_epochs = 300#self.iterations / (len(X) / self.batch_size)
+        n_epochs = 300
 
         # Optimizer and Loss function
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        optimizer.zero_grad()
         loss_criterion = torch.nn.CrossEntropyLoss()
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
 
@@ -79,31 +77,24 @@ class Method_MLP(method, nn.Module):
                 accuracy_evaluator.data = {'true_y': y_true.detach().numpy(), 'pred_y': y_pred.max(1)[1].detach().numpy()}
                 print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
 
-
     def test(self, X):
         """
+        Runs the trained model on input X.
+
         :param X: testing data
-        :return:
+        :return: The most likely predicted class for each instance of X.
         """
         y_pred = self.forward(torch.FloatTensor(np.array(X)))
         return torch.argmax(y_pred, axis=1)
 
     def run(self):
         """
-        NOTE: JUST TEMPLATED.  Not meant to be functional yet.
+        Runs the training process and outputs testing set metrics
         """
         print('Beginning Training Process...')
         self.train(self.data['train']['X'], self.data['train']['y'])
         print('Test Results')
         pred_y = self.test(self.data['test']['X'])
-
-        print(pred_y)
-        print(self.data["test"]['y'])
-
-        print("Testing Set Accuracy: ", sum(np.array(pred_y) == np.array(self.data["test"]['y'])) / len(pred_y))
-        accuracy_evaluator = Evaluate_Accuracy('testing evaluator', '')
-        accuracy_evaluator.data = {'true_y': self.data["test"]['y'], 'pred_y': pred_y}
-        print(accuracy_evaluator.evaluate())
 
         return {'pred_y': pred_y, 'true_y': self.data['test']['y']}
 

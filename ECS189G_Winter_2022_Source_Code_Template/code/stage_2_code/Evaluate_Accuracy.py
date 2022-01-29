@@ -13,14 +13,12 @@ class Evaluate_Accuracy(evaluate):
     data = None
 
     def evaluate(self):
-        print('evaluating performance...')
+        """
+        This function evaluates the precision, f1, accuracy, and recall on the model's predictions.
 
-        #if self.evaluate_name == 'precision':
-            #return precision_score(self.data['true_y'], self.data['pred_y'])
-        #if self.evaluate_name == 'recall':
-            #return recall_score(self.data['true_y'], self.data['pred_y'])
-        #if self.evaluate_name == 'f1':
-           # return f1_score(self.data['true_y'], self.data['pred_y'])
+        :return: Results of F1, Precision, Accuracy, and Recall
+        """
+        print('evaluating performance...')
 
         acc = accuracy_score(self.data['true_y'], self.data['pred_y'])
         prec = precision_score(self.data['true_y'], self.data['pred_y'], average='weighted')

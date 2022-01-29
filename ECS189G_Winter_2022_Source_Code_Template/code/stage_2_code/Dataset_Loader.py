@@ -11,6 +11,11 @@ class Dataset_Loader(dataset):
         super().__init__(dName, dDescription)
 
     def load(self):
+        """
+        Loads the training and testing data into a dictionary.
+
+        :returns: Dictionary of both datasets.
+        """
         print('Loading data...!!!!')
 
         f = open(self.dataset_source_folder_path + "train.csv", 'r')

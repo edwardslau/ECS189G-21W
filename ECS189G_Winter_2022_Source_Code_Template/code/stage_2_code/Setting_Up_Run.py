@@ -12,9 +12,14 @@ import numpy as np
 class Setting_Up_Run(setting):
 
     def load_run_save_evaluate(self):
+        """
+        This code loads the dataset, trains the model, and reports metrics on the efficacy of the model.
+
+        :return: None
+        """
+
         # load dataset
         loaded_data = self.dataset.load()
-        print(loaded_data)
 
         X_train, X_test = np.array(loaded_data['X_train']), np.array(loaded_data['X_test'])
         y_train, y_test = np.array(loaded_data['y_train']), np.array(loaded_data['y_test'])
@@ -28,3 +33,5 @@ class Setting_Up_Run(setting):
         self.result.save()
 
         self.evaluate.data = learned_result
+
+        print(self.evaluate.evaluate())
