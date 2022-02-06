@@ -13,7 +13,7 @@ os.environ["MKL_NUM_THREADS"] = "4"
 class Method_CNN_CIFAR(method, nn.Module):
     data = None
     learning_rate = 1e-04
-    epochs = 30
+    epochs = 50
 
     # https://www.sciencedirect.com/science/article/pii/S2405959519303455#:~:text=The%20optimizer%20used%20for%20both,with%20the%2016%20batch%20size.
     def __init__(self, mName, mDescription):
@@ -25,26 +25,31 @@ class Method_CNN_CIFAR(method, nn.Module):
         self.conv_1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, padding="same")
         self.act_1 = nn.ReLU()
         self.pool_1 = nn.AvgPool2d(2, 2)
-        self.bn_1 = nn.BatchNorm2d(64)
-        self.conv_2 = nn.Conv2d(in_channels=64, out_channels=80, kernel_size=3, padding="same")
+        #self.bn_1 = nn.BatchNorm2d(64)
+        self.conv_2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding="same")
         self.act_2 = nn.ReLU()
         self.pool_2 = nn.AvgPool2d(2, 2)
-        self.bn_2 = nn.BatchNorm2d(32)
-        self.conv_3 = nn.Conv2d(in_channels=80, out_channels=40, kernel_size=3, padding="same")
+        #self.bn_2 = nn.BatchNorm2d(32)
+        self.conv_3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding="same")
         self.act_3 = nn.ReLU()
-        self.bn_3 = nn.BatchNorm2d(32)
+        #self.bn_3 = nn.BatchNorm2d(32)
         # Save pooling for later since the image data is already rather small, try max pooling due
         # to the way the image data is normalized
         # Up to this point, the output datasize will be 32x32
         self.pool_3 = nn.MaxPool2d(2, 2)
+        # self.conv_4 = nn.Conv2d(in_channels=80, out_channels=40, kernel_size=3, padding="same")
+        # self.act_4 = nn.ReLU()
+        # self.pool_4 = nn.MaxPool2d(2, 2)
         #output size is 20x16x16 (PyTorch uses a NCHW scheme).
         # Batch normalization before passing to output
         # We now do the MLP component
         self.flat = nn.Flatten() # the output will now be (num_samples, 20 * 16 * 16)
-        self.fc_1 = nn.Linear(640, 10) # reduce by a factor of 4
+        self.fc_1 = nn.Linear(4096, 512) # reduce by a factor of 4
         self.act_4 = nn.ReLU()
+        self.drop_1 = nn.Dropout(0.5)
+        self.fc_2 = nn.Linear(512, 10)
         #self.fc_2 = nn.Linear(600, 10)# Cifar-10 output classes
-        self.drop = nn.Dropout(0.5)
+        #self.drop = nn.Dropout(0.5)
         # self.conv1 = nn.Conv2d(3, 6, 5)
         # self.pool = nn.MaxPool2d(2, 2)
         # self.conv2 = nn.Conv2d(6, 16, 5)
@@ -73,11 +78,16 @@ class Method_CNN_CIFAR(method, nn.Module):
         output = self.act_3(output)
         #output = self.bn_3(output)
         output = self.pool_3(output)
+        # output = self.conv_4(output)
+        # output = self.act_4(output)
+        # output = self.pool_4(output)
+
         output = self.flat(output)
         output = self.fc_1(output)
         output = self.act_4(output)
         #output = self.fc_2(output)
-        #output = self.drop(output)
+        output = self.drop_1(output)
+        output = self.fc_2(output)
         return output
 
     def train(self, X, y):
@@ -99,7 +109,7 @@ class Method_CNN_CIFAR(method, nn.Module):
         #     optimizer.step()
 
         loss_function = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adadelta(self.parameters()) # lr=self.learning_rate)
+        optimizer = torch.optim.Adadelta(self.parameters())
         accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
         batch_size = 1024
 
