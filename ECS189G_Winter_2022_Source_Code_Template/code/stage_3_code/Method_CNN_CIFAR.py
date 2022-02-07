@@ -25,14 +25,14 @@ class Method_CNN_CIFAR(method, nn.Module):
         self.conv_1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, padding="same")
         self.act_1 = nn.ReLU()
         self.pool_1 = nn.AvgPool2d(2, 2)
-        #self.bn_1 = nn.BatchNorm2d(64)
+        self.bn_1 = nn.BatchNorm2d(64)
         self.conv_2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding="same")
         self.act_2 = nn.ReLU()
         self.pool_2 = nn.AvgPool2d(2, 2)
         #self.bn_2 = nn.BatchNorm2d(32)
         self.conv_3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding="same")
         self.act_3 = nn.ReLU()
-        #self.bn_3 = nn.BatchNorm2d(32)
+        self.bn_3 = nn.BatchNorm2d(256)
         # Save pooling for later since the image data is already rather small, try max pooling due
         # to the way the image data is normalized
         # Up to this point, the output datasize will be 32x32
@@ -76,7 +76,7 @@ class Method_CNN_CIFAR(method, nn.Module):
         #output = self.bn_2(output)
         output = self.conv_3(output)
         output = self.act_3(output)
-        #output = self.bn_3(output)
+        output = self.bn_3(output)
         output = self.pool_3(output)
         # output = self.conv_4(output)
         # output = self.act_4(output)
