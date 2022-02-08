@@ -19,15 +19,14 @@ class Dataset_Loader(dataset):
         print('Loading data...!!!!')
 
         f = open(self.dataset_source_folder_path + "train.csv", 'r')
-        data = np.loadtxt(f, delimiter=",")
-        X_train = data[:, 1:]
-        y_train = data[:, 0]
+        data1 = np.loadtxt(f, delimiter=",")
+        X_train = data1[:, 1:]
+        y_train = data1[:, 0]
         f.close()
 
         f = open(self.dataset_source_folder_path + "test.csv", 'r')
-        data = np.loadtxt(f, delimiter=",")
-        X_test = data[:, 1:]
-        y_test = data[:, 0]
+        data2 = np.loadtxt(f, delimiter=",")
+        X_test = data2[:, 1:]
+        y_test = data2[:, 0]
         f.close()
-
         return {'X_train': X_train, 'y_train': y_train, 'X_test' : X_test, 'y_test' : y_test}

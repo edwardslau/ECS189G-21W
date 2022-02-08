@@ -58,7 +58,7 @@ class Method_MLP(method, nn.Module):
         for epoch in range(1, int(n_epochs) + 1):
             optimizer.zero_grad()
 
-            y_pred = self.forward(torch.FloatTensor(np.array(X)))
+            y_pred = self.forward(torch.FloatTensor(X))
             # convert y to torch.tensor as well
             y_true = torch.LongTensor(np.array(y))
             # calculate the training loss
@@ -75,6 +75,7 @@ class Method_MLP(method, nn.Module):
                 # evaluate how training process is going... WIP.
                 print("Current Progress::....")
                 accuracy_evaluator.data = {'true_y': y_true.detach().numpy(), 'pred_y': y_pred.max(1)[1].detach().numpy()}
+
                 print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', train_loss.item())
 
     def test(self, X):
@@ -92,6 +93,8 @@ class Method_MLP(method, nn.Module):
         Runs the training process and outputs testing set metrics
         """
         print('Beginning Training Process...')
+        print(self.data["train"]["X"].shape)
+        print(self.data["train"]["y"].shape)
         self.train(self.data['train']['X'], self.data['train']['y'])
         print('Test Results')
         pred_y = self.test(self.data['test']['X'])

@@ -1,6 +1,7 @@
 from code.base_class.method import method
 from code.stage_3_code.Dataset_Loader_ORL import Dataset_Loader
 from code.stage_3_code.Evaluator import Evaluate_Accuracy
+from code.stage_3_code.Evaluator_All import Evaluate
 import torch
 import torch.nn as nn
 import numpy as np
@@ -9,7 +10,7 @@ import os
 class Method_CNN_ORL(method, nn.Module):
     data = None
     learning_rate = 1e-4
-    epochs = 100
+    epochs = 1#100
 
     def __init__(self, mName, mDescription):
         method.__init__(self, mName, mDescription)
@@ -72,7 +73,7 @@ class Method_CNN_ORL(method, nn.Module):
 
         loss_function = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-        accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
+        accuracy_evaluator = Evaluate('training evaluator', '')
         batch_size = 500
 
         # Prep data
@@ -104,7 +105,7 @@ class Method_CNN_ORL(method, nn.Module):
                 optimizer.step()
                 #print("optimizer ending..")
 
-            if epoch == 100:
+            if epoch % 5 == 0:
                 print("HIIII")
                 with torch.no_grad():
                     X_test = torch.FloatTensor(np.array(self.data['test']['X'])).permute(0, 3, 1, 2)
@@ -113,7 +114,7 @@ class Method_CNN_ORL(method, nn.Module):
                     print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', losses.item())
 
     def test(self, X):
-        X = X.unsqueeze(-1).permute(0, 3, 1, 2)
+        X = X.permute(0, 3, 1, 2)
         y_pred = self.forward(torch.FloatTensor(np.array(X)))
         return torch.argmax(y_pred, axis=1)
 
@@ -132,6 +133,6 @@ class Method_CNN_ORL(method, nn.Module):
         pred_y = self.test(self.data['test']['X'])
         return {'pred_y': pred_y, 'true_y': self.data['test']['y']}
 
-if __name__ == "__main__":
-    a = Method_CNN_ORL("mnist", '')
-    a.run()
+# if __name__ == "__main__":
+#     a = Method_CNN_ORL("orl", '')
+#     a.run()

@@ -13,7 +13,7 @@ os.environ["MKL_NUM_THREADS"] = "4"
 class Method_CNN_CIFAR(method, nn.Module):
     data = None
     learning_rate = 1e-04
-    epochs = 50
+    epochs = 30
 
     # https://www.sciencedirect.com/science/article/pii/S2405959519303455#:~:text=The%20optimizer%20used%20for%20both,with%20the%2016%20batch%20size.
     def __init__(self, mName, mDescription):
@@ -24,12 +24,12 @@ class Method_CNN_CIFAR(method, nn.Module):
         # Padding = 2
         self.conv_1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, padding="same")
         self.act_1 = nn.ReLU()
-        self.pool_1 = nn.AvgPool2d(2, 2)
         self.bn_1 = nn.BatchNorm2d(64)
+        self.pool_1 = nn.AvgPool2d(2, 2)
         self.conv_2 = nn.Conv2d(in_channels=64, out_channels=128, kernel_size=3, padding="same")
         self.act_2 = nn.ReLU()
+        self.bn_2 = nn.BatchNorm2d(128)
         self.pool_2 = nn.AvgPool2d(2, 2)
-        #self.bn_2 = nn.BatchNorm2d(32)
         self.conv_3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding="same")
         self.act_3 = nn.ReLU()
         self.bn_3 = nn.BatchNorm2d(256)
@@ -68,12 +68,12 @@ class Method_CNN_CIFAR(method, nn.Module):
         # return x
         output = self.conv_1(X)
         output = self.act_1(output)
+        output = self.bn_1(output)
         output = self.pool_1(output)
-        #output = self.bn_1(output)
         output = self.conv_2(output)
         output = self.act_2(output)
+        output = self.bn_2(output)
         output = self.pool_2(output)
-        #output = self.bn_2(output)
         output = self.conv_3(output)
         output = self.act_3(output)
         output = self.bn_3(output)
@@ -118,6 +118,8 @@ class Method_CNN_CIFAR(method, nn.Module):
         y = torch.LongTensor(np.array(y))
         permutation = torch.randperm(X.size()[0])
 
+        losses_total = []
+
         # We will NOT attempt Full-batch SGD again, too large to fit into memory at once
         for epoch in range(1, self.epochs + 1):
             print("Epoch: ", epoch)
@@ -156,19 +158,24 @@ class Method_CNN_CIFAR(method, nn.Module):
                     accuracy_evaluator.data = {'true_y' : self.data['test']['y'], 'pred_y' : torch.argmax(pred_test, dim=1)}
                     print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', losses.item())
 
+            losses_total.append(losses.item())
+
+        with open("/Users/jacquelinemitchell/Documents/cifar_10_losses.npy", "wb") as f:
+            np.save(f, np.array(losses_total))
+
     def test(self, X):
-        y_pred = self.forward(torch.FloatTensor(np.array(X)))
+        y_pred = self.forward(torch.FloatTensor(np.array(X)).permute(0, 3, 1, 2))
         return torch.argmax(y_pred, axis=1)
 
     def run(self):
-        data_obj = Dataset_Loader('cifar', '')
-        data_obj.dataset_source_folder_path = '../../data/stage_3_data/'
-        data_obj.dataset_source_file_name = 'CIFAR'
-
-        data = data_obj.load()
-
-        self.data = {'train': {'X': data['X_train'], 'y': data['y_train']},
-                     'test': {'X': data['X_test'], 'y': data['y_test']}}
+        # data_obj = Dataset_Loader('cifar', '')
+        # data_obj.dataset_source_folder_path = '../../data/stage_3_data/'
+        # data_obj.dataset_source_file_name = 'CIFAR'
+        #
+        # data = data_obj.load()
+        #
+        # self.data = {'train': {'X': data['X_train'], 'y': data['y_train']},
+        #              'test': {'X': data['X_test'], 'y': data['y_test']}}
 
         print(type(self.data['train']['X']))
         self.train(self.data['train']['X'], self.data['train']['y'])
@@ -176,9 +183,9 @@ class Method_CNN_CIFAR(method, nn.Module):
         return {'pred_y': pred_y, 'true_y': self.data['test']['y']}
 
 
-if __name__ == "__main__":
-    a = Method_CNN_CIFAR("cifar", '')
-    a.run()
+# if __name__ == "__main__":
+#     a = Method_CNN_CIFAR("cifar", '')
+#     a.run()
 
 
 
