@@ -10,7 +10,7 @@ import os
 class Method_CNN_ORL(method, nn.Module):
     data = None
     learning_rate = 1e-4
-    epochs = 1#100
+    epochs = 100
 
     def __init__(self, mName, mDescription):
         method.__init__(self, mName, mDescription)
@@ -26,22 +26,7 @@ class Method_CNN_ORL(method, nn.Module):
         self.act_3 = nn.ReLU()
         self.pool_3 = nn.MaxPool2d(kernel_size=2)
 
-        self.fc_1 = nn.Linear(5200, 41)
-
-        # self.cnn1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size=5, stride=1, padding=2)
-        # self.relu1 = nn.ReLU()
-        #
-        # # Max pool 1
-        # self.maxpool1 = nn.MaxPool2d(kernel_size=2)
-        #
-        # # Convolution 2
-        # self.cnn2 = nn.Conv2d(in_channels=16, out_channels=32, kernel_size=5, stride=1, padding=2)
-        # self.relu2 = nn.ReLU()
-        # self.maxpool2 = nn.MaxPool2d(kernel_size=2)
-        #
-        # # One full connected_layer at the end
-        # # After all of our convolutions/poolings; the image size will be 7x7
-        # self.fc1 = nn.Linear(32 * 7 * 7, 10)
+        self.fc_1 = nn.Linear(5200, 40)
 
     def forward(self, X):
 
@@ -54,14 +39,6 @@ class Method_CNN_ORL(method, nn.Module):
         out = self.conv_3(out)
         out = self.act_3(out)
         out = self.pool_3(out)
-        #out = self.fc_1(out)
-
-        # out = self.cnn1(X)
-        # out = self.relu1(out)  # 28x28
-        # out = self.maxpool1(out)  # 14x14
-        # out = self.cnn2(out)  # 14x14
-        # out = self.relu2(out)  # 14x14
-        # out = self.maxpool2(out)  # 7x7
 
         # this gives us a 2D tensor (num_images, channels * im_dim)
         out = out.view(out.size(0), -1)
@@ -83,7 +60,11 @@ class Method_CNN_ORL(method, nn.Module):
         y = torch.LongTensor(np.array(y))
         permutation = torch.randperm(X.size()[0])
 
+        losses_total = []
+
         # We will NOT attempt Full-batch SGD again, too large to fit into memory at once
+        # Credit for minibatching code to:
+        # https://stackoverflow.com/questions/45113245/how-to-get-mini-batches-in-pytorch-in-a-clean-and-efficient-way
         for epoch in range(1, self.epochs + 1):
             for i in range(0, X.size()[0], batch_size):
                 optimizer.zero_grad()
@@ -105,13 +86,18 @@ class Method_CNN_ORL(method, nn.Module):
                 optimizer.step()
                 #print("optimizer ending..")
 
-            if epoch % 5 == 0:
-                print("HIIII")
-                with torch.no_grad():
-                    X_test = torch.FloatTensor(np.array(self.data['test']['X'])).permute(0, 3, 1, 2)
-                    pred_test = self.forward(X_test)
-                    accuracy_evaluator.data = {'true_y' : self.data['test']['y'], 'pred_y' : torch.argmax(pred_test, dim=1)}
-                    print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', losses.item())
+            # if epoch % 5 == 0:
+            #     print("HIIII")
+            #     with torch.no_grad():
+            #         X_test = torch.FloatTensor(np.array(self.data['test']['X'])).permute(0, 3, 1, 2)
+            #         pred_test = self.forward(X_test)
+            #         accuracy_evaluator.data = {'true_y' : self.data['test']['y'], 'pred_y' : torch.argmax(pred_test, dim=1)}
+            #         print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', losses.item())
+
+            losses_total.append(losses.item())
+
+        with open("/Users/jacquelinemitchell/Documents/orl_losses.npy", "wb") as f:
+            np.save(f, np.array(losses_total))
 
     def test(self, X):
         X = X.permute(0, 3, 1, 2)

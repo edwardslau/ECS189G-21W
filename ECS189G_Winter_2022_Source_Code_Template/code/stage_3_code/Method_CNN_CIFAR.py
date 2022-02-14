@@ -1,6 +1,7 @@
 from code.base_class.method import method
 from code.stage_3_code.Dataset_Loader_CIFAR import Dataset_Loader
 from code.stage_3_code.Evaluator import Evaluate_Accuracy
+from code.stage_3_code.Evaluator_All import Evaluate
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -21,7 +22,6 @@ class Method_CNN_CIFAR(method, nn.Module):
         nn.Module.__init__(self)
 
         # Preserve the size of the convolution since the image is very small
-        # Padding = 2
         self.conv_1 = nn.Conv2d(in_channels=3, out_channels=64, kernel_size=3, padding="same")
         self.act_1 = nn.ReLU()
         self.bn_1 = nn.BatchNorm2d(64)
@@ -33,13 +33,7 @@ class Method_CNN_CIFAR(method, nn.Module):
         self.conv_3 = nn.Conv2d(in_channels=128, out_channels=256, kernel_size=3, padding="same")
         self.act_3 = nn.ReLU()
         self.bn_3 = nn.BatchNorm2d(256)
-        # Save pooling for later since the image data is already rather small, try max pooling due
-        # to the way the image data is normalized
-        # Up to this point, the output datasize will be 32x32
         self.pool_3 = nn.MaxPool2d(2, 2)
-        # self.conv_4 = nn.Conv2d(in_channels=80, out_channels=40, kernel_size=3, padding="same")
-        # self.act_4 = nn.ReLU()
-        # self.pool_4 = nn.MaxPool2d(2, 2)
         #output size is 20x16x16 (PyTorch uses a NCHW scheme).
         # Batch normalization before passing to output
         # We now do the MLP component
@@ -48,24 +42,10 @@ class Method_CNN_CIFAR(method, nn.Module):
         self.act_4 = nn.ReLU()
         self.drop_1 = nn.Dropout(0.5)
         self.fc_2 = nn.Linear(512, 10)
-        #self.fc_2 = nn.Linear(600, 10)# Cifar-10 output classes
-        #self.drop = nn.Dropout(0.5)
-        # self.conv1 = nn.Conv2d(3, 6, 5)
-        # self.pool = nn.MaxPool2d(2, 2)
-        # self.conv2 = nn.Conv2d(6, 16, 5)
-        # self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        # self.fc2 = nn.Linear(120, 84)
-        # self.fc3 = nn.Linear(84, 10)
+
 
     def forward(self, X):
 
-        # x = self.pool(F.relu(self.conv1(X)))
-        # x = self.pool(F.relu(self.conv2(x)))
-        # x = torch.flatten(x, 1)  # flatten all dimensions except batch
-        # x = F.relu(self.fc1(x))
-        # x = F.relu(self.fc2(x))
-        # x = self.fc3(x)
-        # return x
         output = self.conv_1(X)
         output = self.act_1(output)
         output = self.bn_1(output)
@@ -78,39 +58,20 @@ class Method_CNN_CIFAR(method, nn.Module):
         output = self.act_3(output)
         output = self.bn_3(output)
         output = self.pool_3(output)
-        # output = self.conv_4(output)
-        # output = self.act_4(output)
-        # output = self.pool_4(output)
 
         output = self.flat(output)
         output = self.fc_1(output)
         output = self.act_4(output)
-        #output = self.fc_2(output)
         output = self.drop_1(output)
         output = self.fc_2(output)
         return output
 
     def train(self, X, y):
 
-        # # X is a torch Variable
-        # permutation = torch.randperm(X.size()[0])
-        #
-        # for i in range(0, X.size()[0], batch_size):
-        #     optimizer.zero_grad()
-        #
-        #     indices = permutation[i:i + batch_size]
-        #     batch_x, batch_y = X[indices], Y[indices]
-        #
-        #     # in case you wanted a semi-full example
-        #     outputs = model.forward(batch_x)
-        #     loss = lossfunction(outputs, batch_y)
-        #
-        #     loss.backward()
-        #     optimizer.step()
 
         loss_function = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adadelta(self.parameters())
-        accuracy_evaluator = Evaluate_Accuracy('training evaluator', '')
+        accuracy_evaluator = Evaluate('training evaluator', '')
         batch_size = 1024
 
         # Prep data
@@ -121,6 +82,8 @@ class Method_CNN_CIFAR(method, nn.Module):
         losses_total = []
 
         # We will NOT attempt Full-batch SGD again, too large to fit into memory at once
+        # Credit for minibatching code to:
+        # https://stackoverflow.com/questions/45113245/how-to-get-mini-batches-in-pytorch-in-a-clean-and-efficient-way
         for epoch in range(1, self.epochs + 1):
             print("Epoch: ", epoch)
 
@@ -149,7 +112,7 @@ class Method_CNN_CIFAR(method, nn.Module):
                 optimizer.step()
                 #print("optimizer ending..")
 
-            if epoch % 5 == 0:
+            if epoch == 50:
                 print("HIIII")
                 with torch.no_grad():
                     self.training = False

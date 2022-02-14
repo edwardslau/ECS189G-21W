@@ -47,14 +47,14 @@ class Dataset_Loader(dataset):
         training_X /= 255
         testing_X /= 255
         #
-        # plt.imshow(training_X[200])
-        # plt.show()
+        plt.imshow(training_X[200])
+        plt.show()
         #
         training_X = normalizer(training_X.permute(0, 3, 1, 2)).permute(0, 2, 3, 1).numpy()
         testing_X = normalizer(testing_X.permute(0, 3, 1, 2)).permute(0, 2, 3, 1).numpy()
 
-        # plt.imshow(training_X[200])
-        # plt.show()
+        plt.imshow(training_X[200])
+        plt.show()
 
         return {"X_train": training_X, "y_train": np.array(training_y),
                 "X_test" : testing_X, "y_test" : np.array(testing_y)}

@@ -44,8 +44,8 @@ class Dataset_Loader(dataset):
         #
         # print(np.array(training_X[20]).shape)
         # print(training_X[20])
-        # plt.imshow(training_X[20])
-        # plt.show()
+        plt.imshow(training_X[20])
+        plt.show()
 
         # ORL Normalization Values
         mean = list(training_X.mean(axis=(0, 1, 2)))
@@ -55,8 +55,13 @@ class Dataset_Loader(dataset):
         training_X = normalizer(training_X.permute(0, 3, 1, 2)).permute(0, 2, 3, 1)
         testing_X = normalizer(testing_X.permute(0, 3, 1, 2)).permute(0, 2, 3, 1)
 
-        # plt.imshow(training_X[20])
-        # plt.show()
+        plt.imshow(training_X[20])
+        plt.show()
 
-        return {"X_train": training_X, "y_train": np.array(training_y),
-                "X_test": testing_X, "y_test": np.array(testing_y)}
+        print(np.unique(np.array(training_y)))
+
+        print({"X_train": training_X.shape, "y_train": np.array(np.array(training_y) - 1).shape,
+                "X_test": testing_X.shape, "y_test": np.array(np.array(testing_y) - 1).shape})
+
+        return {"X_train": training_X, "y_train": np.array(training_y) - 1,
+                "X_test": testing_X, "y_test": np.array(testing_y) - 1} # 1 to make it start at 0
