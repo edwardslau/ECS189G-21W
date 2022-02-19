@@ -10,7 +10,7 @@ torch.manual_seed(2)
 
 class Method_RNN_Classification(method, nn.Module):
     data = None
-    learning_rate = 1e-03
+    learning_rate = 5e-03
 
     def __init__(self, mName, mDescription, vocab_size):
         method.__init__(self, mName, mDescription)
@@ -38,12 +38,11 @@ class Method_RNN_Classification(method, nn.Module):
 
     def forward(self, text, hid):
 
-
         # embedded = [sent len, batch size, emb dim]
         embedded = self.embedding(text)
 
         # hidden returns to you the value at the very last timestep
-        output, hidden_out = self.rnn(embedded, hid)
+        output, hidden_out = self.rnn(embedded, hid)  # output: [batch_size, sent len, output dim]
 
         # hn = hidden.view(-1, 200)
         # output = [sent len, batch size, hid dim]
@@ -53,17 +52,18 @@ class Method_RNN_Classification(method, nn.Module):
         # assert torch.equal(output[-1, :, :], hidden.squeeze(0))
 
         # print("outputshape: ", output.size())
-        batch_size = output.shape[0]
+        batch_size = output.shape[0] # record batch size
 
         #output = output.contiguous().view(-1, self.hidden_dim)
-        output = self.dropout(output)
-        o = self.fc(output)
+        output = self.dropout(output) # just some dropout
+        o = self.fc(output) # results in [batch_size, sent_len, 1]
         #o = o.view(batch_size, -1)
 
         # print("Hidden squeeze: ", hidden.squeeze(0).shape)
         # o = self.fc(hidden.squeeze(0))
 
         # print("o-shape", o.shape)
+        # o[:, -1] means we return the last time step only
         return o[:, -1], hidden_out
 
     def train(self, X, y, X_test, y_test, vocab):
@@ -76,12 +76,13 @@ class Method_RNN_Classification(method, nn.Module):
 
         optimizer = torch.optim.Adam(self.parameters(), lr=self.learning_rate)
         loss_fn = torch.nn.BCEWithLogitsLoss()
-        batch_size = 1000
+        batch_size = 64#1000
 
         epochs = 5
         for epoch in range(epochs):
             print("Epoch: ", epoch)
 
+            self.training = True # activate dropout
             for i in range(0, X.size()[0], batch_size):
                 print("i: ", i)
                 optimizer.zero_grad()
@@ -116,10 +117,13 @@ class Method_RNN_Classification(method, nn.Module):
                 print("HIIII")
                 print(loss.item())
                 with torch.no_grad():
-                    print(self.training)
+                    self.training = False
+                    print(f"self.training status: {self.training}")
                     X_test = torch.LongTensor(X_test)
-                    X_test = X_test[:X_test.size()[0]//2]
-                    y_test = y_test[:len(y_test) // 2]
+                    #X_test = X_test[:X_test.size()[0]//2]
+                    #y_test = y_test[:len(y_test) // 2]
+
+                    total_corr = 0
 
                     for j in range(0, X_test.size()[0], batch_size):
 
@@ -139,7 +143,9 @@ class Method_RNN_Classification(method, nn.Module):
                         correct = np.array(rounded_preds) == np.array(test_batch_y) # convert into float for division
                         #print(correct)
                         acc = sum(correct) / len(correct)
+                        total_corr += sum(correct)
                         print('Epoch:', epoch, 'Batch:', j, '  Accuracy:', acc, 'Loss:', loss.item())
+                    print("TOTAL EPOCH TEST ACCURACY: ", total_corr / X_test.size()[0])
 
 
 if __name__ == "__main__":
