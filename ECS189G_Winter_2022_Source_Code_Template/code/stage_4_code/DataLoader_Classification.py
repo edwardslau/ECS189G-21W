@@ -7,7 +7,6 @@ from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from collections import Counter
 import random
-from torch.utils.data import TensorDataset, DataLoader
 
 random.seed(2)
 np.random.seed(2)
@@ -51,14 +50,14 @@ class Dataset_Loader(dataset):
 
         # We need to shuffle so that we don't have the same kind of label happening after
         # eachother over and over again...
-        X_train_raw, y_train = data["train"], labels["train"]
-        X_test_raw, y_test = data["test"], labels["test"]
+        X_train_raw, y_train = shuffle(data["train"], labels["train"])
+        X_test_raw, y_test = shuffle(data["test"], labels["test"])
 
         # Training Data
         X_train, X_test = [], []
 
         # a = 0
-        b = 25000
+        b = 100
 
         # Now, let us preprocess the data, upon inspection the data has html tags, so
         porter = PorterStemmer()
