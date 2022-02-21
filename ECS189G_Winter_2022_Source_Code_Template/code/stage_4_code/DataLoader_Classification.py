@@ -6,7 +6,9 @@ from bs4 import BeautifulSoup
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from collections import Counter
-import random
+import random, pickle
+#import bcolz
+import torchtext
 
 random.seed(2)
 np.random.seed(2)
@@ -22,9 +24,14 @@ class Dataset_Loader(dataset):
 
     def load_raw_data(self):
 
-        parent_path = "/Users/jacquelinemitchell/Documents/ECS189G/sample_code/ECS189G" \
+        parent_path_backup = "/Users/jacquelinemitchell/Documents/ECS189G/sample_code/ECS189G" \
                       "-21W/ECS189G_Winter_2022_Source_Code_Template/" \
                       "data/stage_4_data/text_classification/"
+
+        if self.dataset_source_folder_path is not None:
+            parent_path = self.dataset_source_folder_path
+        else:
+            parent_path = parent_path_backup
         data = {}
         labels = {}
 
@@ -57,7 +64,7 @@ class Dataset_Loader(dataset):
         X_train, X_test = [], []
 
         # a = 0
-        b = 100
+        b = 10#25000
 
         # Now, let us preprocess the data, upon inspection the data has html tags, so
         porter = PorterStemmer()
@@ -69,8 +76,9 @@ class Dataset_Loader(dataset):
             # We will now remove common words like "and", "or", "but" (stop words)
 
             cleaned_text = [w for w in cleaned_text if w not in stop_words]
-            stemmed = [porter.stem(word) for word in cleaned_text]
-            X_train.append(stemmed)
+            #stemmed = [porter.stem(word) for word in cleaned_text]
+            #X_train.append(stemmed)
+            X_train.append(cleaned_text)
             #print(X_train[i])
 
            # if i == 0:
@@ -81,13 +89,14 @@ class Dataset_Loader(dataset):
             # We will now remove common words like "and", "or", "but" (stop words)
 
             cleaned_text = [w for w in cleaned_text if w not in stop_words]
-            stemmed = [porter.stem(word) for word in cleaned_text]
-            X_test.append(stemmed)
+            #stemmed = [porter.stem(word) for word in cleaned_text]
+            #X_test.append(stemmed)
+            X_test.append(cleaned_text)
            # print(X_test[i])
 
         return {"X_train" : X_train, "y_train" : y_train[:b], "X_test" : X_test, "y_test" : y_test[:b]}
 
-    def construct_vocab(self, data_dict, dict_size=5000):
+    def construct_vocab(self, data_dict, dict_size=25000):
 
         print("Counting")
         # We are going to use the collection items and iterate throughout the keys, in decreasing order
@@ -108,7 +117,7 @@ class Dataset_Loader(dataset):
         return vocabulary
 
     # Pad and prep inspired by https://github.com/Supearnesh/ml-imdb-rnn#step-1---data-collection
-    def pad_and_prep(self, vocabulary, data_dict, max_sentence_length=200):
+    def pad_and_prep(self, vocabulary, data_dict, max_sentence_length=500):
         dummy_pad = 0
         unknown_word = 1
 
@@ -148,14 +157,79 @@ class Dataset_Loader(dataset):
         vocab = self.construct_vocab(data_dict)
         padded_train, padded_test = self.pad_and_prep(vocab, data_dict)
 
-        return {"X_train" : padded_train, "y_train" : np.array(data_dict["y_train"]),
-                "X_test" : padded_test, "y_test" : np.array(data_dict["y_test"])}, vocab
+        return {"X_train": padded_train, "y_train" : np.array(data_dict["y_train"]),
+                "X_test": padded_test, "y_test" : np.array(data_dict["y_test"])}, vocab
 
+    def load_word_embeddings(self, our_vocab):
+
+        our_words = list(our_vocab.keys())
+
+        glove = torchtext.vocab.GloVe(name="6B", dim=100)
+        print('Loaded {} words'.format(len(glove.itos)))
+
+        glove_vecs = {}
+        for word in our_words:
+            try:
+                v = glove.vectors[glove.stoi[word]]
+                glove_vecs[word] = v
+            except:
+                continue
+
+        return glove_vecs
+
+    # def load_word_embeddings(self, our_vocab):
+    #
+    #     our_words = list(our_vocab.keys())
+    #     glove_path = "../../data/stage_4_data"
+    #
+    #     words = []
+    #     word2idx = {}
+    #     idx = 0
+    #     vectors = bcolz.carray(np.zeros(1), rootdir=f"{glove_path}/glove.6B.100d.dat", mode="w")
+    #
+    #     with open(f"{glove_path}/glove.6B.100d.txt", "rb") as f:
+    #         for l in f:
+    #             line = l.decode().split()
+    #             word = line[0]
+    #             words.append(word)
+    #             word2idx[word] = idx
+    #             idx += 1
+    #             vect = np.array(line[1:]).astype(np.float)
+    #             vectors.append(vect)
+    #
+    #     vectors = bcolz.carray(vectors[1:].reshape((400001, 100)), rootdir=f"{glove_path}/glove.6B.100d.dat", mode="w")
+    #     vectors.flush()
+    #     pickle.dump(words, open(f"{glove_path}/6B.100_words.pkl", "wb"))
+    #     pickle.dump(word2idx, open(f"{glove_path}/6B.100_idx.pkl", "wb"))
+    #
+    #     vectors.flush()
+    #     vectors = bcolz.open(f"{glove_path}/6B.100.dat")[:]
+    #     #words = pickle.load(open(f'{glove_path}/6B.100_words.pkl', 'rb'))
+    #     word2idx = pickle.load(open(f'{glove_path}/6B.100_idx.pkl', 'rb'))
+    #
+    #     glove = {}
+    #     for word in our_words:
+    #         try:
+    #             v = vectors[word2idx[word]]
+    #             glove[word] = v
+    #         except:
+    #             continue
+    #
+    #     return glove
 
 if __name__ == '__main__':
     a = Dataset_Loader()
-    b = a.load()
-    #print(b)
+    b, vocab = a.load()
+    # glove = a.load_word_embeddings(vocab)
+    #
+    # #print(glove)
+    # with open("glove_dict.pkl", "wb") as f:
+    #     pickle.dump(glove, f)
+    #
+    # with open("glove_dict.pkl", "rb") as f:
+    #     c = pickle.load(f)
+
+    #print(c)
 
 
 

@@ -19,7 +19,10 @@ class Dataset_Loader(dataset):
 
     def load_raw(self):
 
-        path = "/Users/jacquelinemitchell/Documents/ECS189G/sample_code/ECS189G-21" \
+        if self.dataset_source_folder_path is not None:
+            path = self.dataset_source_folder_path
+        else:
+            path = "/Users/jacquelinemitchell/Documents/ECS189G/sample_code/ECS189G-21" \
                "W/ECS189G_Winter_2022_Source_Code_Template/data/stage_4_data/text_generation/data"
 
         # The longest length of any joke is 204 chars, so we'll make our sequence length this.
