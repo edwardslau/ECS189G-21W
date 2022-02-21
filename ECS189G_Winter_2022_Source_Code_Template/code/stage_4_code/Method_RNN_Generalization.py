@@ -4,6 +4,8 @@ import torch.nn as nn
 from code.stage_4_code.DataLoader_Generation import Dataset_Loader
 import numpy as np
 
+torch.random.seed(2)
+np.random.seed(2)
 
 class Method_RNN_Generalization(method, nn.Module):
 
