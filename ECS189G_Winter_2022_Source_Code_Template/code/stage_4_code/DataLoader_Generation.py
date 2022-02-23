@@ -47,8 +47,8 @@ class Dataset_Loader(dataset):
         vocabulary_i_to_w = {} # index to word
         for i, item in enumerate(counts.most_common()):
             word = item[0]
-            vocabulary_w_to_i[word] = i
-            vocabulary_i_to_w[i] = word
+            vocabulary_w_to_i[word] = i + 1
+            vocabulary_i_to_w[i + 1] = word
 
         self.vocab_w_to_ind = vocabulary_w_to_i
         self.vocab_ind_to_w = vocabulary_i_to_w
@@ -56,6 +56,23 @@ class Dataset_Loader(dataset):
         return vocabulary_w_to_i, vocabulary_i_to_w
 
     def prepare_input_sequences(self, sequences, vocab, sequence_length=3):
+
+        prev_3 = []
+        next_3 = []
+
+        for sentence in sequences:
+            encoded_sentence = [vocab[i] for i in sentence]
+            for i in range(0, len(encoded_sentence) - sequence_length):
+                prev = encoded_sentence[i:i+sequence_length]
+                next = encoded_sentence[i+1:i+sequence_length+1]
+                prev_3.append(prev)
+                next_3.append(next)
+
+        return prev_3, next_3
+
+
+
+    def prepare_input_sequences2(self, sequences, vocab, sequence_length=3):
         # note: vocab is the word to index one.
 
         entire_corpus = list(itertools.chain.from_iterable(sequences))
