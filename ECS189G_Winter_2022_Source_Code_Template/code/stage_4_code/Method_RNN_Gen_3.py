@@ -14,20 +14,29 @@ class Method_RNN_Generalization(method, nn.Module):
         #"method.__init__(self, mName, mDescription)
         nn.Module.__init__(self)
 
-        self.hidden_dim = 300
-        self.embedding_dim = 256
-        self.num_layers = 3
+        self.hidden_dim = 128
+        self.embedding_dim = 300
+        self.num_layers = 1
 
         vocab_size = len(vocab_w_i)
+        print("Vocab size; ", vocab_size)
 
         self.embedding = nn.Embedding(vocab_size, self.embedding_dim)
-        self.lstm = nn.LSTM(self.embedding_dim, self.hidden_dim, num_layers=self.num_layers)
+        self.lstm = nn.GRU(self.embedding_dim, self.hidden_dim, num_layers=self.num_layers, batch_first=True)
         self.fc_1 = nn.Linear(self.hidden_dim, vocab_size)
 
     def forward(self, x, hidden):
         embedded = self.embedding(x) # returns: [batch_size, sequence_length, embedding_dim]
+        #print("Embedding shpae: ", embedded.shape)
         output, hidden_out = self.lstm(embedded, hidden) # returns output: [batch_size, sequence_length, hidden_dim]
+        #print("Output shape: ", output.shape)
+        #print("Hidden_out.shape: ", [h.shape for h in hidden_out])
+        #outs = self.dropout(output)
         outs = self.fc_1(output)
+        #print("outs.shape: ", outs.shape)
+#        outs = torch.argmax(outs, dim=2)
+        outs = outs[:,-1,:] # only retrieve output at the last time step
+        #print("outs.shape: ", outs.shape)
         return outs, hidden_out
 
     def init_state(self, sequence_length):
@@ -56,19 +65,21 @@ class Method_RNN_Generalization(method, nn.Module):
         print(X.shape)
         print(y.shape)
 
-        for epoch in range(1,100):
+        for epoch in range(1,10):
             # Every epoch, reset the hidden states and cell states of the LSTMs
-            hidden_state, cell_state = self.init_state(sequence_length=3)
+            hidden_state, cell_state = self.init_state(sequence_length=46)
 
             for i in range(0, X.size()[0], batch_size):
                 batch_x = X[i:i+batch_size]
                 batch_y = y[i:i+batch_size]
 
+                print(f"Batches: {i},:, {i+batch_size}]")
+
                 optimizer.zero_grad()
 
                 # forward pass
-                y_pred, (hidden_state, cell_state) = self.forward(batch_x, (hidden_state, cell_state))
-                loss = loss_fn(y_pred.transpose(1, 2), batch_y)
+                y_pred, _ = self.forward(batch_x, None)
+                loss = loss_fn(y_pred, batch_y)
 
                 hidden_state = hidden_state.detach()
                 cell_state = cell_state.detach()
@@ -78,7 +89,10 @@ class Method_RNN_Generalization(method, nn.Module):
 
                 print(f"Epoch: {epoch}, Batch: {i}, Loss: {loss.item()}")
 
-        self.generate_text(4, jokes, jokes_len, vocab_w_i, vocab_i_w)
+        self.generate_text(20, jokes, jokes_len, vocab_w_i, vocab_i_w)
+        self.generate_text(29, jokes, jokes_len, vocab_w_i, vocab_i_w)
+        self.generate_text(606, jokes, jokes_len, vocab_w_i, vocab_i_w)
+        self.generate_text(614, jokes, jokes_len, vocab_w_i, vocab_i_w)
 
     def generate_text(self, starter_index, jokes, jokes_len, vocab_w_i, vocab_i_w):
 
@@ -89,25 +103,41 @@ class Method_RNN_Generalization(method, nn.Module):
         self.training = False # turn off dropout; this will cause issues with inference
 
         # This is necessary here, since the sequence lenght we want to input is larger.
-        h = self.init_state(len(text))
+        h = self.init_state(1)
 
         words = text + []
 
-        # 3 because we want to generate the entire joke given 3 input words
         for i in range(0, length-len(text)):
+            #assert True == False
             tokenized = torch.tensor([vocab_w_i[word] for word in text]).unsqueeze(0)
-            prediction, h = self.forward(tokenized, h)
+            #if i == 0:
+            prediction, h = self.forward(tokenized, None)
+            # else:
+            #     prediction, h = self.forward(tokenized, h)
+            prediction = prediction.squeeze(0)
 
-            print("prediction shape: ", prediction.shape)
+            print(prediction.shape)
+            next_word = torch.argmax(prediction).item()
+            print("next predicted word: ", vocab_i_w[next_word])
+            words.append(vocab_i_w[next_word])
+            text = text[1:] + [vocab_i_w[next_word]]
+            print("Next text: ", text)
 
-            last_word_logits = prediction[0][-1]
-            p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
-            #largest_prob = np.argmax(p)
-            #print(largest_prob)
-            #word_index = np.random.choice(len(last_word_logits), p=p)
-            word_index = np.argmax(p)
-            words.append(vocab_i_w[word_index])
-            text = text[1:] + [vocab_i_w[word_index]]
+        # # 3 because we want to generate the entire joke given 3 input words
+        # for i in range(0, length-len(text)):
+        #     tokenized = torch.tensor([vocab_w_i[word] for word in text]).unsqueeze(0)
+        #     prediction, h = self.forward(tokenized, h)
+        #
+        #     print("prediction shape: ", prediction.shape)
+        #
+        #     last_word_logits = prediction[0][-1]
+        #     p = torch.nn.functional.softmax(last_word_logits, dim=0).detach().numpy()
+        #     #largest_prob = np.argmax(p)
+        #     #print(largest_prob)
+        #     #word_index = np.random.choice(len(last_word_logits), p=p)
+        #     word_index = np.argmax(p)
+        #     words.append(vocab_i_w[word_index])
+        #     text = text[1:] + [vocab_i_w[word_index]]
 
         print("Seed text: ", jokes[starter_index][:3])
         print("Real joke: ", jokes[starter_index])

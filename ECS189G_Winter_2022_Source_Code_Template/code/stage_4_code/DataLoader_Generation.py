@@ -30,10 +30,14 @@ class Dataset_Loader(dataset):
         jokes_lengths = [] # jokes lenghts will be useful for inference later, but not immediatlye useful
         with open(path, "r") as f:
             for i, line in enumerate(f):
+                # if i > 500:
+                #     break
                 if i == 0:
                     continue # skip this is the header
+                #print(line)
                 line = line.split(",", 1)[1].replace("\n", "").replace("\"", "").lower()
                 line = line.split()
+                #print(line)
                 jokes.append(line)
                 jokes_lengths.append(len(line))
         return jokes, jokes_lengths
@@ -47,8 +51,8 @@ class Dataset_Loader(dataset):
         vocabulary_i_to_w = {} # index to word
         for i, item in enumerate(counts.most_common()):
             word = item[0]
-            vocabulary_w_to_i[word] = i + 1
-            vocabulary_i_to_w[i + 1] = word
+            vocabulary_w_to_i[word] = i
+            vocabulary_i_to_w[i] = word
 
         self.vocab_w_to_ind = vocabulary_w_to_i
         self.vocab_ind_to_w = vocabulary_i_to_w
@@ -64,13 +68,18 @@ class Dataset_Loader(dataset):
             encoded_sentence = [vocab[i] for i in sentence]
             for i in range(0, len(encoded_sentence) - sequence_length):
                 prev = encoded_sentence[i:i+sequence_length]
-                next = encoded_sentence[i+1:i+sequence_length+1]
+                next = encoded_sentence[i+sequence_length]
+                #next = encoded_sentence[i+sequence_length]
                 prev_3.append(prev)
                 next_3.append(next)
 
+        print("sequences [0]: ", sequences[0])
+        print([[self.vocab_ind_to_w[j] for j in seq] for seq in prev_3])
+        print([self.vocab_ind_to_w[seq] for seq in next_3])
+        print(prev_3)
+        print(next_3)
+
         return prev_3, next_3
-
-
 
     def prepare_input_sequences2(self, sequences, vocab, sequence_length=3):
         # note: vocab is the word to index one.
@@ -79,7 +88,7 @@ class Dataset_Loader(dataset):
         encoded_corpus = [vocab[i] for i in entire_corpus]
 
         previous_3 = [] # X's
-        next_3 = []  # y's
+        next_3 = []     # y's
 
         for i in range(0, len(encoded_corpus) - sequence_length, 1):
             prev = encoded_corpus[i:i+sequence_length]
