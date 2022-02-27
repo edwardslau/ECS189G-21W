@@ -21,9 +21,11 @@ class Method_RNN_Classification(method, nn.Module):
         self.embedding_dim = 100
         self.hidden_dim = 200
         self.output_dim = 1
-        self.sequence_length = 500
+        self.sequence_length = 200
         self.vocab_size = vocab_size
         self.num_layers = 2
+
+        print("VOCAB SIZE; ", vocab_size)
 
         # output of embedding: [sequence_length, batch_size, embed_dim]
         self.embedding = nn.Embedding(self.vocab_size, self.embedding_dim)
@@ -45,9 +47,11 @@ class Method_RNN_Classification(method, nn.Module):
 
         # embedded = [sent len, batch size, emb dim]
         embedded = self.embedding(text)
+        print("Embedding out shape: ", embedded.shape)
 
         # hidden returns to you the value at the very last timestep
         output, hidden_out = self.rnn(embedded, hid)  # output: [batch_size, sent len, output dim]
+        print("Output shape; ", output.shape)
 
         # hn = hidden.view(-1, 200)
         # output = [sent len, batch size, hid dim]
@@ -60,10 +64,12 @@ class Method_RNN_Classification(method, nn.Module):
         batch_size = output.shape[0] # record batch size
 
         output = output.contiguous().view(-1, self.hidden_dim)
+        print("Reviewed outputshape: ", output.shape)
 
         #output = output.contiguous().view(-1, self.hidden_dim)
         output = self.dropout(output) # just some dropout
         o = self.fc(output) # results in [batch_size, sent_len, 1]
+
         o = o.view(batch_size, -1)
 
         # print("Hidden squeeze: ", hidden.squeeze(0).shape)
@@ -191,8 +197,8 @@ class Method_RNN_Classification(method, nn.Module):
 
                 batch_x = X[i:i + batch_size, :]
 
-                h0 = torch.zeros((1, batch_x.size()[0], self.hidden_dim))
-                c0 = torch.zeros((1, batch_x.size()[0], self.hidden_dim))
+                h0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
+                c0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
 
                 pred_test, h_out = self.forward(batch_x, (h0, c0))
                 pred_test = pred_test.squeeze(-1)
