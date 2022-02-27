@@ -18,15 +18,11 @@ class Setting_Up_Run(setting):
         :return: None
         """
         # load dataset
-        loaded_data, vocab_w_i, vocab_i_w, jokes, jokes_len = self.dataset.load()
-
-        X_train, X_test = np.array(loaded_data['X_train']), np.array(loaded_data['X_test'])
-        y_train, y_test = np.array(loaded_data['y_train']), np.array(loaded_data['y_test'])
+        context, targets, vocab_w_i, vocab_i_w, jokes, jokes_len = self.dataset.load()
 
         # run MethodModule
-        self.method.data = {'train': {'X': X_train, 'y': y_train}, 'test': {'X': X_test, 'y': y_test}}
-        self.method.vocab_size = len(vocab) + 2 # + 2 for padding and unknown characters.
-        self.method.vocab_w_i = vocab
+        self.method.data = {'X': context, 'y': targets, 'w_i' : vocab_w_i, 'i_w' : vocab_i_w,
+                            'jokes' : jokes, "jokes_len" : jokes_len}
         learned_result = self.method.run()
 
         # save raw ResultModule
