@@ -73,7 +73,7 @@ class Dataset_Loader(dataset):
                 prev_3.append(prev)
                 next_3.append(next)
 
-        print("sequences [0]: ", sequences[0])
+        print("sequences [0]: ", sequences[4])
         print([[self.vocab_ind_to_w[j] for j in seq] for seq in prev_3])
         print([self.vocab_ind_to_w[seq] for seq in next_3])
         print(prev_3)
