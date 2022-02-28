@@ -122,8 +122,8 @@ class Method_RNN_Classification(method, nn.Module):
 
                 batch_x, batch_y = X[i:i + batch_size, :], y[i:i+batch_size]
 
-                h0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
-                c0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
+                #h0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
+                #c0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
 
                 # print(batch_x[:, 0])
                 # print([vocab[i] for i in batch_x[:, 0]])
@@ -132,7 +132,7 @@ class Method_RNN_Classification(method, nn.Module):
                 # print("batch_x shape: ", batch_x.shape)
                 # print("batch_y shape: ", batch_y.shape)
 
-                output, hidden_out = self.forward(batch_x, (h0, c0))
+                output, hidden_out = self.forward(batch_x, None)
                 output = output.squeeze(-1)
                 # print("Output shapel: ", output.shape)
                 # print("Output shape: ", batch_y.shape)
@@ -161,10 +161,10 @@ class Method_RNN_Classification(method, nn.Module):
                         test_batch_x, test_batch_y = X_test[j:j+batch_size,:], y_test[j:j+batch_size]
 
                         # (num_layers, batch_size, hidden_dimension)
-                        h0 = torch.zeros((self.num_layers, test_batch_x.size()[0], self.hidden_dim))
-                        c0 = torch.zeros((self.num_layers, test_batch_x.size()[0], self.hidden_dim))
+                        #h0 = torch.zeros((self.num_layers, test_batch_x.size()[0], self.hidden_dim))
+                        #c0 = torch.zeros((self.num_layers, test_batch_x.size()[0], self.hidden_dim))
 
-                        pred_test, h_out = self.forward(test_batch_x, (h0, c0))
+                        pred_test, h_out = self.forward(test_batch_x, None)
                         pred_test = pred_test.squeeze(-1)
                         # print(pred_test)
                         #print(pred_test.shape)
@@ -197,10 +197,10 @@ class Method_RNN_Classification(method, nn.Module):
 
                 batch_x = X[i:i + batch_size, :]
 
-                h0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
-                c0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
+                #h0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
+                #c0 = torch.zeros((self.num_layers, batch_x.size()[0], self.hidden_dim))
 
-                pred_test, h_out = self.forward(batch_x, (h0, c0))
+                pred_test, h_out = self.forward(batch_x, None)
                 pred_test = pred_test.squeeze(-1)
                 rounded_preds = np.array(torch.round(torch.sigmoid(pred_test)))
 

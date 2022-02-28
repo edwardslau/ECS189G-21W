@@ -25,7 +25,7 @@ class Method_RNN_Generalization(method, nn.Module):
         #input("...")
 
         self.embedding = nn.Embedding(vocab_size, self.embedding_dim)
-        self.lstm = nn.GRU(self.embedding_dim, self.hidden_dim, num_layers=self.num_layers, batch_first=True)
+        self.lstm = nn.RNN(self.embedding_dim, self.hidden_dim, num_layers=self.num_layers, batch_first=True)
         self.fc_1 = nn.Linear(self.hidden_dim, vocab_size)
 
     def forward(self, x, hidden):
@@ -85,6 +85,7 @@ class Method_RNN_Generalization(method, nn.Module):
 
         #print(per_sentences)
 
+        losses_per_epoch = []
 
         for epoch in range(1,10):
             # Every epoch, reset the hidden states and cell states of the LSTMs
@@ -124,7 +125,10 @@ class Method_RNN_Generalization(method, nn.Module):
                 optimizer.step()
 
                 print(f"Epoch: {epoch}, Batch: {i}, Loss: {loss.item()}")
+            losses_per_epoch.append(loss.item())
 
+        with open("/Users/jacquelinemitchell/Documents/rnn_generation_losses.npy", "wb") as f:
+            np.save(f, np.array(losses_per_epoch))
 
         joke_tracker = defaultdict(int)
         total_jokes_corr = 0
