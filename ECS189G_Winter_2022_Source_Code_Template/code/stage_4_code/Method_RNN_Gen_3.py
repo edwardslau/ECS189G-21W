@@ -25,7 +25,7 @@ class Method_RNN_Generalization(method, nn.Module):
         #input("...")
 
         self.embedding = nn.Embedding(vocab_size, self.embedding_dim)
-        self.lstm = nn.RNN(self.embedding_dim, self.hidden_dim, num_layers=self.num_layers, batch_first=True)
+        self.lstm = nn.GRU(self.embedding_dim, self.hidden_dim, num_layers=self.num_layers, batch_first=True)
         self.fc_1 = nn.Linear(self.hidden_dim, vocab_size)
 
     def forward(self, x, hidden):
