@@ -31,7 +31,7 @@ class Dataset_Loader(dataset):
         class_dict = {c : i for i, c in enumerate(node_data.category.unique())}
         node_data['category'] = [class_dict[i] for i in node_data['category']]
 
-        print(node_data.shape)
+        #(node_data.shape)
 
         return node_data.to_numpy(), edge_data.to_numpy(), class_dict
 
@@ -124,9 +124,9 @@ class Dataset_Loader(dataset):
         idx_test = torch.LongTensor(np.array(test_indices))
 
         train_test = {'idx_train': idx_train, 'idx_test': idx_test}
-        graph = {'node': idx_map, 'edge': edges, 'X': features, 'y': categorial_labels,
+        graph = {'node': idx_map, 'edge': edges, 'X': features, 'y': labels,
                  'utility': {'A': adj, 'reverse_idx': idx_map_reversed}}
-        return {'graph': graph, 'train_test_val': train_test}
+        return {'graph': graph, 'train_test': train_test}
 
 
 
