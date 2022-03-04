@@ -5,6 +5,7 @@ import math
 from code.base_class.method import method
 import torch.nn.functional as F
 import numpy as np
+from code.stage_5_code.Evaluator import Evaluate
 
 torch.manual_seed(2)
 np.random.seed(2)
@@ -62,12 +63,13 @@ class Method_GCN_Cora(method, nn.Module):
         x = self.sgc_2(x, adj)
         return x # going to use CE Loss, so not going to softmax.
 
-    def train(self, X, y, adj):
+    def train(self, X, y, adj, train_idx, test_idx):
 
         n_epochs = 5
         batch_size = 200
         loss_fn = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.parameters(), lr=0.01)
+        accuracy_evaluator = Evaluate('training evaluator', '')
 
         X = torch.FloatTensor(np.array(X))
         y = torch.LongTensor(np.array(y))
@@ -86,13 +88,20 @@ class Method_GCN_Cora(method, nn.Module):
                 #print('batch_x.shape: ', batch_x.shape)
                 #print('batch_y.shape: ', batch_y.shape)
 
+            # Pass all of the data because of the adjacency matrix stuff
             y_pred = self.forward(X, adj)
-            loss = loss_fn(y_pred, X)
+            loss = loss_fn(y_pred[train_idx], y[train_idx])
 
             loss.backward()
             optimizer.step()
 
             print(f"Epoch: {epoch}, Loss: {loss.item()}")
+            print("Running testing accuracy: ")
+            with torch.no_grad():
+                pred_test = self.forward(X, adj)
+                accuracy_evaluator.data = {'true_y': y[test_idx], 'pred_y': torch.argmax(pred_test, dim=1)[test_idx]}
+                print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', loss.item())
+
 
             # OKAY: debug later: basically, GCN needs the entire adj mat and thus all of the
             # node features; if we only provide certain data at idxs, like we did, we'll get a
@@ -108,10 +117,10 @@ class Method_GCN_Cora(method, nn.Module):
         all_inputs, all_labels = graph_data['X'], graph_data['y']
         adj = graph_data['utility']['A']
 
-        X_train, y_train = all_inputs[train_idx, :], all_labels[train_idx]
-        X_test, y_test = all_inputs[test_idx, :], all_inputs[test_idx]
+        # X_train, y_train = all_inputs, all_labels
+        # X_test, y_test = all_inputs, all_inputs[test_idx]
 
-        self.train(X_train, y_train, adj)
+        self.train(all_inputs, all_labels, adj, train_idx, test_idx)
 
 
 
