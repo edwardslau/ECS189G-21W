@@ -5,10 +5,6 @@ import numpy as np
 import torch
 from collections import Counter
 
-data_path = "/Users/jacquelinemitchell/Documents/ECS189G/sample_code/" \
-            "ECS189G-21W/ECS189G_Winter_2022_Source_Code_Template/data/stage_5_data/cora"
-
-
 class Dataset_Loader(dataset):
 
     data_to_node_features = {'cora' : 1433, 'citeseer' : 3703, 'pubmed' : 500}
@@ -19,7 +15,7 @@ class Dataset_Loader(dataset):
         assert self.dName is not None
 
     def load_raw(self):
-        path = self.dataset_source_folder_path + f"/{self.dName}"
+        data_path = self.dataset_source_folder_path + f"/{self.dName}"
         num_features = self.data_to_node_features[self.dName]
 
         column_names_node = ["Node"] + [f"word_{i}" for i in range(num_features)] + ["category"]
@@ -52,7 +48,7 @@ class Dataset_Loader(dataset):
         shape = torch.Size(sparse_mx.shape)
         return torch.sparse.FloatTensor(indices, values, shape)
 
-    def get_training_testing_idx(self, possible_idx, num_classes, categorial_labels):
+    def get_training_testing_idx(self, possible_idx, num_classes, categorial_labels, max_instances):
 
         train_indices = []
         for c in range(num_classes):
@@ -65,11 +61,11 @@ class Dataset_Loader(dataset):
         valid_idx = np.array(list(set(list(possible_idx)) - set(train_indices)))
         for c in range(num_classes):
 
-            if len(valid_idx[np.where(categorial_labels[valid_idx] == c)[0]]) <= 200:
+            if len(valid_idx[np.where(categorial_labels[valid_idx] == c)[0]]) <= max_instances:
                 test_indices += list(valid_idx[np.where(categorial_labels[valid_idx] == c)[0]])
             else:
                 chosen_indices = np.random.choice(valid_idx[np.where(categorial_labels[valid_idx] == c)[0]],
-                                                  200, replace=False)
+                                                  max_instances, replace=False)
                 test_indices += list(chosen_indices)
 
         assert len(list(set(train_indices) - set(test_indices))) == len(train_indices)
@@ -108,14 +104,18 @@ class Dataset_Loader(dataset):
 
         possible_idx = np.array(range(features.size()[0]))
         if self.dName == 'cora':
+            max_instances = 150
+        else:
+            max_instances = 200
+        if self.dName == 'cora':
             num_classes = 7
-            train_indices, test_indices = self.get_training_testing_idx(possible_idx, num_classes, categorial_labels)
+            train_indices, test_indices = self.get_training_testing_idx(possible_idx, num_classes, categorial_labels, max_instances)
         elif self.dName == 'citeseer':
             num_classes = 6
-            train_indices, test_indices = self.get_training_testing_idx(possible_idx, num_classes, categorial_labels)
+            train_indices, test_indices = self.get_training_testing_idx(possible_idx, num_classes, categorial_labels, max_instances)
         elif self.dName == 'pubmed':
             num_classes = 3
-            train_indices, test_indices = self.get_training_testing_idx(possible_idx, num_classes, categorial_labels)
+            train_indices, test_indices = self.get_training_testing_idx(possible_idx, num_classes, categorial_labels, max_instances)
         else:
             print("Not a valid dataset.")
             assert False == True
