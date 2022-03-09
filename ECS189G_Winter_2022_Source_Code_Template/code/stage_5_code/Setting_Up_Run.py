@@ -18,11 +18,12 @@ class Setting_Up_Run(setting):
         :return: None
         """
         # load dataset
-        node, edge, _ = self.dataset.load_raw()
+        node, edge, class_dict = self.dataset.load_raw()
         loaded_data = self.dataset.load(node, edge)
 
         # run MethodModule
         self.method.data = loaded_data
+        self.method.class_dict = class_dict
         learned_result = self.method.run()
 
         # save raw ResultModule
