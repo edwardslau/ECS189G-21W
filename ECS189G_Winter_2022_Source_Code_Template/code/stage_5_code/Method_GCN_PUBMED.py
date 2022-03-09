@@ -56,8 +56,8 @@ class Method_GCN_PUBMED(method, nn.Module):
         method.__init__(self, mName, mDescription)
         nn.Module.__init__(self)
 
-        self.hidden = 100
-        self.hidden2 = 50
+        self.hidden = 300
+        self.hidden2 = 75
         self.n_class = 3
 
         self.sgc_1 = GraphConvolution(500, self.hidden)
@@ -69,17 +69,19 @@ class Method_GCN_PUBMED(method, nn.Module):
     def forward(self, x, adj, bool=False, y=None, idx=None):
         x = self.sgc_1(x, adj)
         x = F.relu(x)
+        #x = F.dropout(x, self.dropout, training=self.training)
         x = self.sgc_2(x, adj)
         x = F.relu(x)
         x = F.dropout(x, self.dropout, training=self.training)
         x = self.sgc_3(x, adj)
+        x = F.relu(x)
         if bool == True:
             self.tsnefunct(x, y, idx)
         x = self.fc_1(x)
         return x
 
     def train(self, X, y, adj, train_idx, test_idx):
-        n_epochs = 20
+        n_epochs = 17
         batch_size = 200
         loss_fn = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.parameters(), lr=0.01)
@@ -122,6 +124,8 @@ class Method_GCN_PUBMED(method, nn.Module):
                     pred_test = self.forward(X, adj, bool=True, y=y, idx=test_idx)
                 else:
                     pred_test = self.forward(X, adj)
+
+                print("Pred test shape: ", pred_test.shape)
                 accuracy_evaluator.data = {'true_y': y[test_idx], 'pred_y': torch.argmax(pred_test, dim=1)[test_idx]}
                 print('Epoch:', epoch, 'Accuracy:', accuracy_evaluator.evaluate(), 'Loss:', loss.item())
 
