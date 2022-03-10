@@ -54,35 +54,37 @@ class Method_GCN_Citeseer(method, nn.Module):
         method.__init__(self, mName, mDescription)
         nn.Module.__init__(self)
 
-        self.hidden = 750
-        self.hidden2 = 325
+        self.hidden = 1200
+        self.hidden2 = 400
+        self.hidden3 = 250
         self.n_class = 6
 
         self.sgc_1 = GraphConvolution(3703, self.hidden)
         self.sgc_2 = GraphConvolution(self.hidden, self.hidden2)
-        self.sgc_3 = GraphConvolution(self.hidden2, self.hidden2)
+        self.sgc_3 = GraphConvolution(self.hidden2, self.hidden3)
         self.dropout = 0.3
         self.fc_1 = nn.Linear(self.hidden2, self.n_class)
 
     def forward(self, x, adj, bool=False, y=None, idx=None):
         x = self.sgc_1(x, adj)
         x = F.relu(x)
-        #x = F.dropout(x, self.dropout, training=self.training)
+        x = F.dropout(x, self.dropout, training=self.training)
+        #print("Self training: ", self.training)
         x = self.sgc_2(x, adj)
         x = F.relu(x)
-        x = F.dropout(x, self.dropout, training=self.training)
-        x = self.sgc_3(x, adj)
-        x = F.relu(x)
-        #if bool == True:
-        #    self.tsnefunct(x, y, idx)
+        #x = F.dropout(x, self.dropout, training=self.training)
+        #x = self.sgc_3(x, adj)
+        #x = F.relu(x)
+        if bool == True:
+           self.tsnefunct(x, y, idx)
         x = self.fc_1(x)
         return x
 
     def train(self, X, y, adj, train_idx, test_idx):
-        n_epochs = 15
+        n_epochs = 20
         batch_size = 200
         loss_fn = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.01)
+        optimizer = torch.optim.Adadelta(self.parameters())
         accuracy_evaluator = Evaluate('training evaluator', '')
 
         X = torch.FloatTensor(np.array(X))
