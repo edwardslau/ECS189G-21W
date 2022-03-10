@@ -1,5 +1,5 @@
 from code.stage_5_code.DataLoader_All import Dataset_Loader
-from code.stage_5_code.Method_GCN_CITESER import Method_GCN_Citeseer
+from code.stage_5_code.Method_GCN_CITESEER import Method_GCN_Citeseer
 from code.stage_5_code.Setting_Up_Run import Setting_Up_Run
 from code.stage_5_code.Evaluator import Evaluate
 from code.stage_5_code.Result_Saver import Result_Saver
