@@ -82,7 +82,7 @@ class Method_GCN_Cora(method, nn.Module):
 
     def train(self, X, y, adj, train_idx, test_idx):
 
-        n_epochs = 5
+        n_epochs = 6
         batch_size = 200
         loss_fn = nn.CrossEntropyLoss()
         optimizer = torch.optim.Adam(self.parameters(), lr=0.01)
